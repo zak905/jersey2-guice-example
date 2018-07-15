@@ -1,21 +1,31 @@
 package com.gwidgets;
 
+import javax.inject.Inject;
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.ext.Provider;
 
+
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import org.jvnet.hk2.guice.bridge.api.GuiceBridge;
+import org.jvnet.hk2.guice.bridge.api.GuiceIntoHK2Bridge;
 
-@ApplicationPath("/webapi")
+@ApplicationPath("/")
 public class Config extends ResourceConfig {
 
-	public Config() {
-		packages("com.gwidgets");
+	@Inject
+	public Config(ServiceLocator serviceLocator) {
+		packages("com.gwidgets.resource");
 		Injector injector = Guice.createInjector(new GuiceModule());
-		HK2toGuiceModule hk2Module = new HK2toGuiceModule(injector);
-		register(hk2Module);
+		initGuiceIntoHK2Bridge(serviceLocator, injector);
+	}
+
+
+	private void initGuiceIntoHK2Bridge(ServiceLocator serviceLocator, Injector injector) {
+		GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
+		GuiceIntoHK2Bridge guiceBridge = serviceLocator.getService(GuiceIntoHK2Bridge.class);
+		guiceBridge.bridgeGuiceInjector(injector);
 	}
 }
